@@ -1,6 +1,8 @@
 import pandas as pd
+import os
 
-DATA_PATH = '../data/raw/Music Info.csv'
+DATA_PATH = 'data/raw/Music Info.csv' ## Not use .. becuase we will run this file in the pipeline by 
+                                    # dvc repro and it works from the root directory
 
 def clean_data(data):
     """
@@ -34,7 +36,7 @@ def data_for_content_filtering(data):
     Cleans the input DataFrame by dropping specific columns.
 
     This function takes a DataFrame and removes the columns "track_id", "name",
-    and "spotify_preview_url". It is intended to prepare the data for content based
+    and "spotify_preview_url". It is intended to prepare thedata for content based
     filtering by removing unnecessary features.
 
     Parameters:
@@ -62,8 +64,16 @@ def main(data_path):
     ## perform data cleaning
     cleaned_data = clean_data(data)
 
+    ## Create the directory if it doesn't exist
+    output_dir = 'data/processed'
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+        print(f"Created directory: {output_dir}")
+
     ## save cleaned data
-    cleaned_data.to_csv('../data/processed/cleaned_music_info.csv', index=False)
+    output_path = os.path.join(output_dir, 'cleaned_music_info.csv')
+    ## save cleaned data
+    cleaned_data.to_csv('data/processed/cleaned_music_info.csv', index=False)
 
 
 if __name__ == "__main__":

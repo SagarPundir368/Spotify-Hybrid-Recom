@@ -2,16 +2,19 @@
 import numpy as np
 import pandas as pd
 import joblib
+import os
 from sklearn.preprocessing import MinMaxScaler,StandardScaler,OneHotEncoder
 from category_encoders import CountEncoder
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.compose import ColumnTransformer
 from sklearn.metrics.pairwise import cosine_similarity
-from data_cleaning import data_for_content_filtering
+from src.data_cleaning import data_for_content_filtering
 from scipy.sparse import save_npz  ## For saving the sparse matrix
 
 ## Cleaned data path
-CLEANED_DATA_PATH = '../data/processed/cleaned_music_info.csv'
+CLEANED_DATA_PATH = 'data/processed/cleaned_music_info.csv'  ## Not use .. becuase we will run this file in the pipeline by 
+                                    # dvc repro and it works from the root directory
+
 
 ## COLS TO TRANSFORM
 frequency_enode_cols = ['year']
@@ -48,8 +51,14 @@ def train_transformer(data):
 
     ## Fit the transformer on the data
     transformer.fit(data)
+
+    ## NEW: Create the directory if it doesn't exist
+    model_dir = 'models'
+    if not os.path.exists(model_dir):
+        os.makedirs(model_dir)
+        print(f"Created directory: {model_dir}")
     ## Save the transformer to a file
-    joblib.dump(transformer, '../models/transformer.joblib')
+    joblib.dump(transformer, 'models/cb_transformer.joblib')
 
 
 
@@ -62,7 +71,7 @@ def transform_data(data):
         array-like: The transformed data.
     """
     # load the transformer
-    transformer = joblib.load("../models/transformer.joblib")
+    transformer = joblib.load("models/cb_transformer.joblib")
     
     # transform the data
     transformed_data = transformer.transform(data)
@@ -103,7 +112,7 @@ def calculate_similarity_scores(input_vector,data):
 
 
 
-def content_recommendation(song_name,artist_name,songs_data, transformed_data, k=10):
+def recommend(song_name,songs_data, transformed_data, k=10):
     """
     Recommends top k songs similar to the given song based on content-based filtering.
 
@@ -119,11 +128,10 @@ def content_recommendation(song_name,artist_name,songs_data, transformed_data, k
     """
     ## Convert into lowercase
     song_name = song_name.lower()
-    artist_name = artist_name.lower()
     ## Find the index of the song in the dataset
-    song_row = songs_data.loc[(songs_data['name'] == song_name) & (songs_data['artist'] == artist_name)]
+    song_row = songs_data.loc[songs_data['name'] == song_name]
     if song_row.empty:
-        raise ValueError(f"Song '{song_name}' by '{artist_name}' not found in the dataset.")
+        raise ValueError(f"Song '{song_name}' not found in the dataset.")
     
     song_index = song_row.index[0]
     ## Get the input vector for the song
@@ -133,23 +141,24 @@ def content_recommendation(song_name,artist_name,songs_data, transformed_data, k
     ## top k songs indexes
     top_k_songs_indexes = np.argsort(similarity_scores.ravel())[-(k+1):][::-1]  ## +1 to exclude the song itself
     ## Get the recommended songs names
-    top_k_recom_songs_names = songs_data.iloc[top_k_songs_indexes]
+    top_k_songs_names = songs_data.iloc[top_k_songs_indexes]
      # print the top k songs
-    top_k_list = top_k_recom_songs_names[['name','artist','spotify_preview_url']].reset_index(drop=True)
+    top_k_list = top_k_songs_names[['name','artist','spotify_preview_url']].reset_index(drop=True)
     return top_k_list
 
 
 
-def main(data_path):
+def test_recommendation(data_path,song_name,k=10):
     """
     Test the recommendations for a given song using content-based filtering.
-
     Parameters:
     data_path (str): The path to the CSV file containing the song data.
-
+    song_name (str): The name of the song for which to test the recommendations.
+    k (int, optional): The number of similar songs to recommend. Default is 10.
     Returns:
     None: Prints the top k recommended songs based on content similarity.
     """
+    song_name = song_name.lower()
     # load the data
     data = pd.read_csv(data_path)
     # clean the data
@@ -158,8 +167,31 @@ def main(data_path):
     train_transformer(data_content_filtering)
     # transform the data
     transformed_data = transform_data(data_content_filtering)
-    #save transformed data
-    save_transformed_data(transformed_data,"data/transformed_data.npz")
+    ## NEW: Create the transformed data directory if it doesn't exist
+    model_dir = 'data/transformed'
+    if not os.path.exists(model_dir):
+        os.makedirs(model_dir)
+        print(f"Created directory: {model_dir}")
+    # save transformed data
+    save_transformed_data(transformed_data,"data/transformed/transformed_music_info.npz")
+    # filter the songs data for recommendation
+    song_row = data.loc[data['name'] == song_name]
+    print(song_row)
+    if song_row.empty:
+        raise ValueError(f"Song '{song_name}' not found in the dataset.")
+    # get the song index
+    song_index = song_row.index[0]
+    # get the input vector for the song
+    input_vector = transformed_data[song_index].reshape(1,-1)
+    # calculate similarity scores
+    similarity_scores = calculate_similarity_scores(input_vector, transformed_data)
+    # top k songs indexes
+    top_k_songs_indexes = np.argsort(similarity_scores.ravel())[-(k+1):][::-1]  ## +1 to exclude the song itself
+    # Get the recommended songs names
+    top_k_songs_names = data.iloc[top_k_songs_indexes]
+    # print the top k songs
+    print(top_k_songs_names)
+
     
 if __name__ == "__main__":
-    main(CLEANED_DATA_PATH)
+    test_recommendation(CLEANED_DATA_PATH, "Hips Don't Lie")
