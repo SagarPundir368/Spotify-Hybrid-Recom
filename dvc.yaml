@@ -16,3 +16,15 @@ stages:
     outs:
       - data/transformed/transformed_music_info.npz
       - models/cb_transformer.joblib
+
+  interaction_data:
+    cmd: python -m src.collaborative_based_filtering
+    deps:
+      - src/collaborative_based_filtering.py
+      - data/processed/cleaned_music_info.csv
+      - data/raw/User Listening History.csv
+    outs:
+      - data/processed/tracks_ids.npy
+      - data/processed/collab_filtered_data.csv
+      - data/processed/interaction_matrix.npz
+    
