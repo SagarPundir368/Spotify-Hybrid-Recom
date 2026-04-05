@@ -25,8 +25,8 @@ stages:
       size: 13712182
     - path: src/content_based_filtering.py
       hash: md5
-      md5: 7b920f39b1b72621862fe6ab8f5d032b
-      size: 7797
+      md5: 38b2a3f28739dba36df2fb074297c98e
+      size: 6610
     - path: src/data_cleaning.py
       hash: md5
       md5: 910e4ad17cd58ace81021d83238558df
@@ -38,8 +38,8 @@ stages:
       size: 4523508
     - path: models/cb_transformer.joblib
       hash: md5
-      md5: cf63ebc660c2e2e54e32f6f6cb307253
-      size: 135933
+      md5: c27feec3e31e508e002751be0539d1d3
+      size: 135949
   interaction_data:
     cmd: python -m src.collaborative_based_filtering
     deps:
