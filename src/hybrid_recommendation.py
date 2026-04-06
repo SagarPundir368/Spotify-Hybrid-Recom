@@ -7,24 +7,14 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 class HybridRecommenderSystem:
 
-    def __init__(self, song_name: str,
-                artist_name: str, 
+    def __init__(self,
                 number_of_recommendations: int, 
-                weight_content_based: float, 
-                weight_collaborative: float, 
-                songs_data, transformed_matrix, 
-                interaction_matrix, track_ids):
+                weight_content_based):
         
         self.number_of_recommendations = number_of_recommendations
-        self.song_name= song_name.lower()
-        self.artist_name= artist_name.lower()
         self.weight_content_based = weight_content_based
         self.weight_collaborative = 1 - weight_content_based
-        self.songs_data = songs_data
-        self.transformed_matrix = transformed_matrix 
-        self.interaction_matrix = interaction_matrix 
-        self.track_ids = track_ids
-
+        
     def __calculate_content_based_similarities(self,song_name,artist_name,songs_data,transformed_matrix):
         ## FILTER OUT THE SONG FROM THE DATA
         song_row = songs_data.loc[(songs_data['name'] == song_name) & (songs_data['artist'] == artist_name)]
@@ -61,19 +51,21 @@ class HybridRecommenderSystem:
         weighted_scores = (self.weight_content_based * content_based_scores) + (self.weight_collaborative * collaborative_filtering_scores)
         return weighted_scores
     
-    def give_recommendations(self):
+    def give_recommendations(self,song_name,
+                                artist_name,songs_data, track_ids,                                 
+                                transformed_matrix,interaction_matrix):
         ## CONTENT BASED SIMILARITIES
-        content_based_similarities = self.__calculate_content_based_similarities(song_name= self.song_name, 
-                                                                               artist_name= self.artist_name, 
-                                                                               songs_data= self.songs_data, 
-                                                                               transformed_matrix= self.transformed_matrix)
+        content_based_similarities = self.__calculate_content_based_similarities(song_name= song_name, 
+                                                                               artist_name= artist_name, 
+                                                                               songs_data= songs_data, 
+                                                                               transformed_matrix= transformed_matrix)
         
         ## COLLABORAIVE FILTERING SIMILARITIES
-        collaborative_filtering_similarities = self.__calculate_collaborative_filtering_similarities(song_name= self.song_name, 
-                                                                                                   artist_name= self.artist_name, 
-                                                                                                   track_ids= self.track_ids, 
-                                                                                                   songs_data= self.songs_data,
-                                                                                                   interaction_matrix= self.interaction_matrix)
+        collaborative_filtering_similarities = self.__calculate_collaborative_filtering_similarities(song_name= song_name, 
+                                                                                                   artist_name= artist_name, 
+                                                                                                   track_ids= track_ids, 
+                                                                                                   songs_data= songs_data,
+                                                                                                   interaction_matrix= interaction_matrix)
 
         ## NORMALIZING SCORES
         normalize_content_based_similarities = self.__normalize_similarities(content_based_similarities)
@@ -86,7 +78,7 @@ class HybridRecommenderSystem:
         recommendation_indices = np.argsort(weighted_scores.ravel())[-self.number_of_recommendations-1:][::-1]
 
         ## GET TOP K RECOMMENDATIONS
-        recommendation_track_ids = self.track_ids[recommendation_indices]
+        recommendation_track_ids = track_ids[recommendation_indices]
 
         ## GET TOP SCORES
         top_scores = np.sort(weighted_scores.ravel())[-self.number_of_recommendations-1:][::-1]
@@ -95,8 +87,8 @@ class HybridRecommenderSystem:
         scores_df = pd.DataFrame({"track_id":recommendation_track_ids.tolist(),
                                 "score":top_scores})
         top_k_songs = (
-                        self.songs_data
-                        .loc[self.songs_data["track_id"].isin(recommendation_track_ids)]
+                        songs_data
+                        .loc[songs_data["track_id"].isin(recommendation_track_ids)]
                         .merge(scores_df,on="track_id")
                         .sort_values(by="score",ascending=False)
                         .drop(columns=["track_id","score"])
