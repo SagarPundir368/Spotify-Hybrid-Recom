@@ -1,8 +1,8 @@
 category_encoders==2.8.1
-dask==2026.3.0
-dvc==3.67.1
+# dask==2026.3.0
+# dvc==3.67.1
 joblib==1.5.3
-PyYAML
+# PyYAML
 numpy==2.2.6
 pandas==2.3.3
 scikit-learn==1.7.2
