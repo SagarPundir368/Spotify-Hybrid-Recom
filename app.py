@@ -1,7 +1,8 @@
 ## STREAMLIT APP FOR THE CONTENT BASED FILTERING RECOMMENDATION SYSTEM
 import streamlit as st
 from src.content_based_filtering import recommend
-from src.collaborative_based_filtering import collaborative_recommendation
+# from src.collaborative_based_filtering import collaborative_recommendation
+from src.collaborative_based_inference import collaborative_recommendation
 from src.hybrid_recommendation import HybridRecommenderSystem 
 from scipy.sparse import load_npz
 from numpy import load
