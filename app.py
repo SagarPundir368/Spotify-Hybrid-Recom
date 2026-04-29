@@ -1,8 +1,6 @@
 # =========================
 # IMPORTS
 # =========================
-import os
-import subprocess
 import streamlit as st
 from src.content_based_filtering import recommend
 from src.collaborative_based_inference import collaborative_recommendation
@@ -10,31 +8,6 @@ from src.hybrid_recommendation import HybridRecommenderSystem
 from scipy.sparse import load_npz
 from numpy import load
 import pandas as pd
-
-
-# =========================
-# ENSURE DATA (DVC PULL)
-# =========================
-def ensure_data():
-    check_path = "data/processed/interaction_matrix.npz"
-
-    # if file exists → local run
-    if os.path.exists(check_path):
-        return
-
-    # else → pull from DVC remote
-    st.info("Downloading data from DVC remote...")
-
-    result = subprocess.run(["dvc", "pull"], capture_output=True, text=True)
-
-    if result.returncode != 0:
-        st.error("DVC pull failed")
-        st.text(result.stderr)
-        st.stop()
-
-
-# CALL BEFORE LOADING DATA
-ensure_data()
 
 
 # =========================
