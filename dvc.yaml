@@ -7,6 +7,14 @@ stages:
     outs:
       - data/processed/cleaned_music_info.csv
     
+  song_artist_combos:
+    cmd: python -m src.song_artist_combo
+    deps:
+      - src/song_artist_combo.py
+      - data/processed/cleaned_music_info.csv
+    outs:
+      - data/processed/unique_songs&artist_combo.csv
+
   transform_data:
     cmd: python -m src.content_based_filtering
     deps:
