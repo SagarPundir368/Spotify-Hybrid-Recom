@@ -4,10 +4,7 @@ import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
 
 
-# =========================
-# ✅ ONLY INFERENCE LOGIC
-# =========================
-
+# ONLY INFERENCE LOGIC
 def collaborative_recommendation(song_name, artist_name, track_ids, songs_data, interaction_matrix, k=5):
     ## LOWERCASING
     song_name = song_name.lower()

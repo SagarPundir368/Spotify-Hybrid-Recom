@@ -84,3 +84,19 @@ stages:
       hash: md5
       md5: eb26445e81672120489b3e7d82a0762a
       size: 2977348
+  song_artist_combos:
+    cmd: python -m src.song_artist_combo
+    deps:
+    - path: data/processed/cleaned_music_info.csv
+      hash: md5
+      md5: ad73ab9b7c97fed0f3cc26fc9b24f8c6
+      size: 13712182
+    - path: src/song_artist_combo.py
+      hash: md5
+      md5: dff06baf4caa72b4a96b583954e1e064
+      size: 731
+    outs:
+    - path: data/processed/unique_songs&artist_combo.csv
+      hash: md5
+      md5: ba53a8c0697367203eb9b9dd37baf1a7
+      size: 1453471
